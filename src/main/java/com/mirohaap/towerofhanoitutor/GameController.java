@@ -161,7 +161,7 @@ public class GameController implements PropertyChangeListener {
         Move last = Repository.getInstance().popLastValidMove();
         Tutor.getInstance().revertMove();
 
-        currentTransition = dragDropUtil.animateMove(last.reversed(), speedSlider.getValue() * 1000 * 0.9, new MutableBoolean(true));
+        dragDropUtil.animateMove(last.reversed(), speedSlider.getValue() * 1000 * 0.9, new MutableBoolean(true));
 
     }
 
