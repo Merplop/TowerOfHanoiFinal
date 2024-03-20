@@ -162,8 +162,8 @@ public class Tutor {
         Move move = new Move(n, from, to);
         bestMoves.add(move);
     }
-  
-  public Move getNextMove(){
+
+    public Move getNextMove() {
         if (bestMoves.isEmpty()) {
             throw new RuntimeException("Tutor called before calculateMoves called!");
         }
@@ -194,30 +194,29 @@ public class Tutor {
         computeBestMoves(n - 1, aux_rod, to_rod, from_rod);
     }
 
-    public void revertMove(){
-        if(moveNumber > 0){
+    public void revertMove() {
+        if (moveNumber > 0) {
             moveNumber--;
-        }
-        else{
+        } else {
             throw new RuntimeException("There are no more moves to revert!");
         }
     }
-  
-    public int getMoveNumber(){
+
+    public int getMoveNumber() {
         return moveNumber;
     }
 
-    public void setController(GameController gameController){
+    public void setController(GameController gameController) {
         controller = gameController;
     }
 
 
-    public boolean movesLeft(){
+    public boolean movesLeft() {
         return !(moveNumber == bestMoves.size());
     }
 
 
-      /**
+    /**
      * Returns the singleton instance of the Tutor class.
      * If the instance does not exist, it is created.
      *

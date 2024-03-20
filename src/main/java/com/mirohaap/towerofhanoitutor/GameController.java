@@ -27,6 +27,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Controls the game logic and UI interactions for the Tower of Hanoi tutor application.
+ * It handles initialization of game elements, user actions like auto-playing or stepping
+ * through the game, and updates the UI based on game state changes.
+ */
 public class GameController implements PropertyChangeListener {
 
     @FXML
@@ -44,33 +49,32 @@ public class GameController implements PropertyChangeListener {
     private AutoPlayUtil autoPlayUtil;
     private Window window;
 
+    /**
+     * Initializes the controller and sets up the UI based on whether the tutor mode is enabled.
+     */
     @FXML
     private void initialize() {
-        if(!Tutor.getInstance().isEnabled()){
+        if (!Tutor.getInstance().isEnabled()) {
             speedSlider.setVisible(false);
             autoPlayButton.setVisible(false);
             backButton.setVisible(false);
             nextButton.setVisible(false);
             secondsDisplay.setVisible(false);
             timeLabel.setVisible(false);
-        }else{
+        } else {
             backButton.setDisable(true);
         }
 
-        secondsDisplay.textProperty().bind(
-                Bindings.format(
-                        "%.2f",
-                        speedSlider.valueProperty()
-                ));
-
-
-
-
-
+        secondsDisplay.textProperty().bind(Bindings.format("%.2f", speedSlider.valueProperty()));
     }
 
+    /**
+     * Initializes the rings based on the selected number of rings and adjusts the game
+     * environment accordingly.
+     *
+     * @param ringCount The number of rings selected for the game.
+     */
     public void initRings(int ringCount) {
-        //keep only the rings that are needed
         List<Ring> rings = new ArrayList<>() {{
             for (int i = 1; i <= 10; i++) {
                 if (i <= ringCount) {
@@ -84,7 +88,6 @@ public class GameController implements PropertyChangeListener {
         }};
         Repository.getInstance().init(ringCount);
 
-        //adjust tower heights based off ring count
         if (ringCount < 10) {
             double adjustment = 29 * (10 - ringCount);
             for (int i = 1; i < 4; i++) {
@@ -97,47 +100,54 @@ public class GameController implements PropertyChangeListener {
         this.dragDropUtil = new DragDropUtil(gamePanel, rings);
         Repository.getInstance().addListener(this);
         AnimationRepository.getInstance().addListener(this);
-
     }
 
+    /**
+     * Handles the restart button click by closing the current game window and opening a new one.
+     *
+     * @throws IOException If an I/O error occurs.
+     */
     @FXML
     public void onRestartButtonClick() throws IOException {
-        // Close current Game Window
         Stage currentGameStage = (Stage) autoPlayButton.getScene().getWindow();
         currentGameStage.close();
-        // Open new game window
         Window.getInstance().resetGame();
-
     }
 
+    /**
+     * Opens the analytics window to display game statistics.
+     *
+     * @throws IOException If an I/O error occurs.
+     */
     @FXML
     public void showAnalytics() throws IOException {
         AnalyticsWindow aw = new AnalyticsWindow();
         aw.openWindow();
     }
 
+    /**
+     * Begins or pauses the auto-play functionality depending on the current state.
+     */
     @FXML
-    public void beginAutoPlay(){
-
-        if(autoPlayUtil == null && !AnimationRepository.getInstance().animationsRunning()){
-            //autoPlayButton.setDisable(true);
+    public void beginAutoPlay() {
+        if (autoPlayUtil == null && !AnimationRepository.getInstance().animationsRunning()) {
             allowInteractions(false);
             autoPlayUtil = new AutoPlayUtil(dragDropUtil);
             autoPlayUtil.beginPlaying((int) (speedSlider.getValue() * 1000));
             autoPlayButton.setText("Pause");
-        }
-        else if (autoPlayUtil != null){
+        } else if (autoPlayUtil != null) {
             autoPlayUtil.stopPlaying();
             autoPlayUtil = null;
-            //allowInteractions(true);
             autoPlayButton.setText("AutoPlay");
         }
-
     }
 
+    /**
+     * Advances the game by one move.
+     */
     @FXML
-    public void stepForward(){
-        if(AnimationRepository.getInstance().animationsRunning()){
+    public void stepForward() {
+        if (AnimationRepository.getInstance().animationsRunning()) {
             return;
         }
         dragDropUtil.disableUserInput();
@@ -146,13 +156,14 @@ public class GameController implements PropertyChangeListener {
         next.setValid(true);
         Repository.getInstance().applyMove(next);
         dragDropUtil.animateMove(next, speedSlider.getValue() * 1000 * 0.9, new MutableBoolean(false));
-
-
     }
 
+    /**
+     * Reverts the game by one move.
+     */
     @FXML
-    public void stepBack(){
-        if(AnimationRepository.getInstance().animationsRunning()){
+    public void stepBack() {
+        if (AnimationRepository.getInstance().animationsRunning()) {
             return;
         }
         dragDropUtil.disableUserInput();
@@ -162,16 +173,17 @@ public class GameController implements PropertyChangeListener {
         Tutor.getInstance().revertMove();
 
         dragDropUtil.animateMove(last.reversed(), speedSlider.getValue() * 1000 * 0.9, new MutableBoolean(true));
-
     }
 
-    public void propertyChange(PropertyChangeEvent evt){
-
-        switch(evt.getPropertyName()){
+    /**
+     * Handles property changes and updates the UI accordingly.
+     *
+     * @param evt The property change event.
+     */
+    public void propertyChange(PropertyChangeEvent evt) {
+        switch (evt.getPropertyName()) {
             case "move":
-                System.out.println("move made" + (Move) evt.getNewValue());
-                if(!AnimationRepository.getInstance().animationsRunning() && autoPlayUtil == null){
-                    System.out.println("enabling back");
+                if (!AnimationRepository.getInstance().animationsRunning() && autoPlayUtil == null) {
                     backButton.setDisable(!(Repository.getInstance().getValidMoveCount() > 0));
                 }
                 break;
@@ -179,68 +191,83 @@ public class GameController implements PropertyChangeListener {
                 updateInterface();
                 break;
             case "win":
-
                 allowInteractions(false);
-                if(autoPlayUtil != null){
+                if (autoPlayUtil != null) {
                     autoPlayUtil.stopPlaying();
                 }
                 dragDropUtil.disableUserInput();
-
-
                 gameComplete();
-                System.out.println("win detected");
                 backButton.setDisable(false);
-
                 break;
         }
-
     }
 
-    private void updateInterface(){
-        if(autoPlayUtil != null){
+    /**
+     * Updates the game interface based on the current state.
+     */
+    private void updateInterface() {
+        if (autoPlayUtil != null) {
             speedSlider.setDisable(true);
             return;
         }
-        if(Tutor.getInstance().isEnabled()){
+        if (Tutor.getInstance().isEnabled()) {
             backButton.setDisable(!(Repository.getInstance().getValidMoveCount() > 0));
             nextButton.setDisable(!Tutor.getInstance().movesLeft());
             autoPlayButton.setDisable(!Tutor.getInstance().movesLeft());
             dragDropUtil.allowUserInput(Tutor.getInstance().movesLeft());
             speedSlider.setDisable(false);
-        }
-        else{
+        } else {
             dragDropUtil.allowUserInput(!Repository.getInstance().checkWin());
         }
-
     }
 
-    private void allowInteractions(boolean canInteract){
+    /**
+     * Allows or disallows user interactions based on the parameter.
+     *
+     * @param canInteract Whether interactions should be allowed.
+     */
+    private void allowInteractions(boolean canInteract) {
         speedSlider.setDisable(!canInteract);
         backButton.setDisable(!canInteract);
         nextButton.setDisable(!canInteract);
     }
 
-    public void gameComplete(){
+    /**
+     * Displays a game completion alert to the user.
+     */
+    public void gameComplete() {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "You won the game!", ButtonType.FINISH);
         alert.showAndWait();
     }
 
-    public void textToDisplay(String message){
+    /**
+     * Displays a given message in the tutor text area.
+     *
+     * @param message The message to display.
+     */
+    public void textToDisplay(String message) {
         tutorText.getChildren().clear();
         Text text = new Text(message);
         text.setFont(Font.font(20));
         tutorText.getChildren().add(text);
     }
 
-
-    public void setWindow(Window window){
+    /**
+     * Sets the window associated with this controller.
+     *
+     * @param window The window to set.
+     */
+    public void setWindow(Window window) {
         this.window = window;
     }
 
-
+    /**
+     * Handles the restart button click action.
+     *
+     * @throws IOException If an I/O error occurs.
+     */
     @FXML
-    public void onRestartButtonCLick() throws IOException{
+    public void onRestartButtonCLick() throws IOException {
         window.resetGame();
     }
-
 }
