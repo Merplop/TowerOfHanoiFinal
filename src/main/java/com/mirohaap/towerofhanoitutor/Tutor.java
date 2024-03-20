@@ -230,10 +230,6 @@ public class Tutor {
         return _instance;
     }
 
-    public boolean movesLeft(){
-        return !(moveNumber == bestMoves.size());
-    }
-
     public ArrayList<Move> getBestMoves() {
         return bestMoves;
     }
