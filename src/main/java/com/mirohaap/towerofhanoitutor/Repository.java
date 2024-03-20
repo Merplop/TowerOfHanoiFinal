@@ -41,6 +41,10 @@ public class Repository{
         changes.addPropertyChangeListener(listener);
     }
 
+    public void addListener(PropertyChangeListener listener){
+        changes.addPropertyChangeListener(listener);
+    }
+
     public void init(int ringCount){
         towers.clear();
         for(int i = 0; i < 3; i++){

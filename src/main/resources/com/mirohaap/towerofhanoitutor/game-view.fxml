@@ -69,7 +69,10 @@
                </children>
             </AnchorPane>
             <Polyline fill="#f2ebe4" layoutX="249.0" layoutY="163.0" points="540.0, -163.0, 340.0, -34.0, -49.0, -34.0, -249.0, -163.0" strokeType="INSIDE" />
+
             <Button fx:id="analyticsButton" layoutX="715.0" layoutY="-3.0" mnemonicParsing="false" onAction="#showAnalytics" prefHeight="31.0" prefWidth="74.0" text="Analytics" />
+
+
          </children>
       </AnchorPane>
       <AnchorPane fx:id="gamePanel" layoutX="42.0" layoutY="43.0" prefHeight="360.0" prefWidth="730.0">

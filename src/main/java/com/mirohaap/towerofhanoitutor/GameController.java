@@ -14,12 +14,16 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+
 import javafx.stage.Stage;
+
 import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+
 import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,7 +40,6 @@ public class GameController implements PropertyChangeListener {
     @FXML
     public TextFlow tutorText;
 
-    TranslateTransition currentTransition;
     private DragDropUtil dragDropUtil;
     private AutoPlayUtil autoPlayUtil;
     private Window window;
@@ -59,6 +62,8 @@ public class GameController implements PropertyChangeListener {
                         "%.2f",
                         speedSlider.valueProperty()
                 ));
+
+
 
 
 
@@ -92,6 +97,7 @@ public class GameController implements PropertyChangeListener {
         this.dragDropUtil = new DragDropUtil(gamePanel, rings);
         Repository.getInstance().addListener(this);
         AnimationRepository.getInstance().addListener(this);
+
     }
 
     @FXML
@@ -101,6 +107,7 @@ public class GameController implements PropertyChangeListener {
         currentGameStage.close();
         // Open new game window
         Window.getInstance().resetGame();
+
     }
 
     @FXML
@@ -145,10 +152,12 @@ public class GameController implements PropertyChangeListener {
 
     @FXML
     public void stepBack(){
-        if(currentTransition != null && currentTransition.getStatus() == Animation.Status.RUNNING){
+        if(AnimationRepository.getInstance().animationsRunning()){
             return;
         }
         dragDropUtil.disableUserInput();
+        allowInteractions(false);
+
         Move last = Repository.getInstance().popLastValidMove();
         Tutor.getInstance().revertMove();
 
@@ -157,7 +166,52 @@ public class GameController implements PropertyChangeListener {
     }
 
     public void propertyChange(PropertyChangeEvent evt){
-        System.out.println("move made" + (Move) evt.getNewValue());
+
+        switch(evt.getPropertyName()){
+            case "move":
+                System.out.println("move made" + (Move) evt.getNewValue());
+                if(!AnimationRepository.getInstance().animationsRunning() && autoPlayUtil == null){
+                    System.out.println("enabling back");
+                    backButton.setDisable(!(Repository.getInstance().getValidMoveCount() > 0));
+                }
+                break;
+            case "all_animations_complete":
+                updateInterface();
+                break;
+            case "win":
+
+                allowInteractions(false);
+                if(autoPlayUtil != null){
+                    autoPlayUtil.stopPlaying();
+                }
+                dragDropUtil.disableUserInput();
+
+
+                gameComplete();
+                System.out.println("win detected");
+                backButton.setDisable(false);
+
+                break;
+        }
+
+    }
+
+    private void updateInterface(){
+        if(autoPlayUtil != null){
+            speedSlider.setDisable(true);
+            return;
+        }
+        if(Tutor.getInstance().isEnabled()){
+            backButton.setDisable(!(Repository.getInstance().getValidMoveCount() > 0));
+            nextButton.setDisable(!Tutor.getInstance().movesLeft());
+            autoPlayButton.setDisable(!Tutor.getInstance().movesLeft());
+            dragDropUtil.allowUserInput(Tutor.getInstance().movesLeft());
+            speedSlider.setDisable(false);
+        }
+        else{
+            dragDropUtil.allowUserInput(!Repository.getInstance().checkWin());
+        }
+
     }
 
     private void allowInteractions(boolean canInteract){
@@ -178,6 +232,7 @@ public class GameController implements PropertyChangeListener {
         tutorText.getChildren().add(text);
     }
 
+
     public void setWindow(Window window){
         this.window = window;
     }
@@ -187,4 +242,5 @@ public class GameController implements PropertyChangeListener {
     public void onRestartButtonCLick() throws IOException{
         window.resetGame();
     }
+
 }
