@@ -87,6 +87,9 @@ public class Repository{
 
     private void logMove(Move move){
         moves.push(move);
+        if (Tutor.getInstance().isEnabled()) {
+            verifyOptimal(move);
+        }
         System.out.println(towers);
         if(!checkWin()){
             changes.firePropertyChange("move", null, move);
